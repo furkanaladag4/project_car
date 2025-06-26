@@ -11,55 +11,77 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
 
   const login = async (email, password) => {
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock successful login
-    if (email && password) {
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    if (storedUser && storedUser.email === email && storedUser.password === password) {
       const mockUser = {
         id: '1',
-        name: 'Car Enthusiast',
+        name: storedUser.name || 'Car Enthusiast',
         email: email,
-        favorites: [],
+        favorites: storedUser.favorites || [],
         isAuthenticated: true
       };
       setUser(mockUser);
+      localStorage.setItem('user', JSON.stringify(mockUser));
       return true;
     }
     return false;
   };
 
-  const register = async (name, email, password) => {
-    // Simulate API call
+  const signup = async (name, email, password) => {
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock successful registration
-    if (name && email && password) {
-      const mockUser = {
-        id: '1',
-        name: name,
-        email: email,
-        favorites: [],
-        isAuthenticated: true
-      };
-      setUser(mockUser);
-      return true;
+    const existingUser = JSON.parse(localStorage.getItem('user'));
+    if (existingUser && existingUser.email === email) {
+      return false;
     }
-    return false;
+    const newUser = {
+      id: '1',
+      name,
+      email,
+      password,
+      favorites: [],
+      isAuthenticated: true
+    };
+    setUser(newUser);
+    localStorage.setItem('user', JSON.stringify(newUser));
+    return true;
   };
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem('user');
+  };
+
+  const addFavorite = (carId) => {
+    if (!user) return;
+    const updatedUser = {
+      ...user,
+      favorites: [...new Set([...user.favorites, carId])]
+    };
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
+  const removeFavorite = (carId) => {
+    if (!user) return;
+    const updatedUser = {
+      ...user,
+      favorites: user.favorites.filter(id => id !== carId)
+    };
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
   const value = {
     user,
     login,
-    register,
+    signup,
     logout,
+    addFavorite,
+    removeFavorite,
     isAuthenticated: !!user
   };
 

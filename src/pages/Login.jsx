@@ -9,6 +9,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -18,18 +19,35 @@ const Login = () => {
     setIsLoading(true);
     setError('');
 
+    if (password.length < 6) {
+      setError('Şifre en az 6 karakter olmalı.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const success = await login(email, password);
       if (success) {
+        if (rememberMe) {
+          localStorage.setItem('rememberMe', 'true');
+        } else {
+          localStorage.removeItem('rememberMe');
+        }
         navigate('/dashboard');
       } else {
-        setError('Invalid email or password');
+        setError('Geçersiz e-posta veya şifre.');
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError('Bir hata oluştu. Lütfen tekrar deneyin.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleForgotPassword = (e) => {
+    e.preventDefault();
+    alert('Parola sıfırlama bağlantısı e-postanıza gönderildi. (Bu özellik henüz geliştirme aşamasında.)');
+    // Backend entegrasyonu için: API çağrısı yaparak parola sıfırlama e-postası gönderilebilir.
   };
 
   return (
@@ -114,6 +132,8 @@ const Login = () => {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="h-4 w-4 text-automotive-red focus:ring-automotive-red border-gray-300 rounded"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
@@ -122,9 +142,12 @@ const Login = () => {
               </div>
 
               <div className="text-sm">
-                <a href="#" className="font-medium text-automotive-red hover:text-automotive-red-dark">
+                <button
+                  onClick={handleForgotPassword}
+                  className="font-medium text-automotive-red hover:text-automotive-red-dark"
+                >
                   Forgot your password?
-                </a>
+                </button>
               </div>
             </div>
 

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Car, Mail, Phone, MapPin } from 'lucide-react';
+import { Car, Mail } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
@@ -8,12 +9,12 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo and Description */}
           <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center space-x-2 mb-4">
+            <Link to="/" className="flex items-center space-x-2 mb-4">
               <div className="bg-gradient-red p-2 rounded-lg">
                 <Car className="h-6 w-6 text-white" />
               </div>
               <span className="text-xl font-bold font-automotive">CarInfo Pro</span>
-            </div>
+            </Link>
             <p className="text-gray-400 mb-4">
               Your ultimate destination for comprehensive car information, expert reviews, and AI-powered automotive insights.
             </p>
@@ -29,10 +30,10 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              <li><a href="/cars" className="text-gray-400 hover:text-white transition-colors">Browse Cars</a></li>
-              <li><a href="/compare" className="text-gray-400 hover:text-white transition-colors">Compare Vehicles</a></li>
-              <li><a href="/reviews" className="text-gray-400 hover:text-white transition-colors">Expert Reviews</a></li>
-              <li><a href="/ai-chat" className="text-gray-400 hover:text-white transition-colors">AI Assistant</a></li>
+              <li><Link to="/cars" className="text-gray-400 hover:text-white transition-colors">Browse Cars</Link></li>
+              <li><span className="text-gray-400 opacity-50 cursor-not-allowed">Compare Vehicles (Soon)</span></li>
+              <li><span className="text-gray-400 opacity-50 cursor-not-allowed">Expert Reviews (Soon)</span></li>
+              <li><Link to="/ai-chat" className="text-gray-400 hover:text-white transition-colors">AI Assistant</Link></li>
             </ul>
           </div>
 
@@ -40,10 +41,10 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Categories</h3>
             <ul className="space-y-2">
-              <li><a href="/cars?category=luxury" className="text-gray-400 hover:text-white transition-colors">Luxury Cars</a></li>
-              <li><a href="/cars?category=sports" className="text-gray-400 hover:text-white transition-colors">Sports Cars</a></li>
-              <li><a href="/cars?category=electric" className="text-gray-400 hover:text-white transition-colors">Electric Vehicles</a></li>
-              <li><a href="/cars?category=suv" className="text-gray-400 hover:text-white transition-colors">SUVs</a></li>
+              <li><Link to="/cars?category=luxury" className="text-gray-400 hover:text-white transition-colors">Luxury Cars</Link></li>
+              <li><Link to="/cars?category=sports" className="text-gray-400 hover:text-white transition-colors">Sports Cars</Link></li>
+              <li><Link to="/cars?category=electric" className="text-gray-400 hover:text-white transition-colors">Electric Vehicles</Link></li>
+              <li><Link to="/cars?category=suv" className="text-gray-400 hover:text-white transition-colors">SUVs</Link></li>
             </ul>
           </div>
         </div>

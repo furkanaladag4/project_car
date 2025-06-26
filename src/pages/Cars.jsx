@@ -1,5 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Filter, Grid, List } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { cars } from '../data/cars';
 import CarCard from '../components/CarCard';
 
@@ -10,7 +12,22 @@ const Cars = () => {
   const [sortBy, setSortBy] = useState('price');
   const [viewMode, setViewMode] = useState('grid');
 
+  const { user, addFavorite, removeFavorite } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const categories = ['all', 'sedan', 'suv', 'sports', 'electric', 'luxury', 'truck'];
+
+  // URL parametrelerinden kategori ve arama terimi okuma
+  useEffect(() => {
+    const category = searchParams.get('category');
+    const search = searchParams.get('search');
+    if (category && categories.includes(category)) {
+      setSelectedCategory(category);
+    }
+    if (search) {
+      setSearchTerm(search);
+    }
+  }, [searchParams]);
 
   const filteredCars = useMemo(() => {
     let filtered = cars.filter(car => {
@@ -22,7 +39,6 @@ const Cars = () => {
       return matchesSearch && matchesCategory && matchesPrice;
     });
 
-    // Sort cars
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'price':
@@ -40,38 +56,51 @@ const Cars = () => {
   }, [searchTerm, selectedCategory, priceRange, sortBy]);
 
   const handleViewDetails = (car) => {
-    // Navigate to car details page
-    console.log('View details for:', car);
+    navigate(`/cars/${car.id}`);
+  };
+
+  const handleToggleFavorite = (carId) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    if (user.favorites.includes(carId)) {
+      removeFavorite(carId);
+    } else {
+      addFavorite(carId);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-automotive-navy mb-2">Browse Cars</h1>
           <p className="text-gray-600">Discover your perfect vehicle from our extensive collection</p>
         </div>
 
-        {/* Filters */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search cars..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setSearchParams({ search: e.target.value, category: selectedCategory });
+                }}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-automotive-red focus:border-transparent"
               />
             </div>
 
-            {/* Category Filter */}
             <select
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                setSearchParams({ category: e.target.value, search: searchTerm });
+              }}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-automotive-red focus:border-transparent"
             >
               {categories.map(category => (
@@ -81,7 +110,6 @@ const Cars = () => {
               ))}
             </select>
 
-            {/* Sort */}
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
@@ -92,7 +120,6 @@ const Cars = () => {
               <option value="rating">Sort by Rating</option>
             </select>
 
-            {/* View Mode */}
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setViewMode('grid')}
@@ -109,7 +136,6 @@ const Cars = () => {
             </div>
           </div>
 
-          {/* Price Range */}
           <div className="mt-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Price Range: ${priceRange[0].toLocaleString()} - ${priceRange[1].toLocaleString()}
@@ -137,25 +163,24 @@ const Cars = () => {
           </div>
         </div>
 
-        {/* Results Count */}
         <div className="flex justify-between items-center mb-6">
           <p className="text-gray-600">
             Showing {filteredCars.length} of {cars.length} cars
           </p>
         </div>
 
-        {/* Car Grid */}
         <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
           {filteredCars.map((car) => (
             <CarCard
               key={car.id}
               car={car}
               onViewDetails={handleViewDetails}
+              isFavorite={user?.favorites?.includes(car.id) || false}
+              onToggleFavorite={handleToggleFavorite}
             />
           ))}
         </div>
 
-        {/* No Results */}
         {filteredCars.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">

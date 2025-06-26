@@ -1,11 +1,30 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight, Car, Users, MessageSquare, Star, Zap, Shield } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowRight, Car, Users, MessageSquare } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { cars } from '../data/cars';
 import CarCard from '../components/CarCard';
 
 const Home = () => {
+  const { user, addFavorite, removeFavorite } = useAuth();
+  const navigate = useNavigate();
   const featuredCars = cars.slice(0, 3);
+
+  const handleViewDetails = (car) => {
+    navigate(`/cars/${car.id}`);
+  };
+
+  const handleToggleFavorite = (carId) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    if (user.favorites.includes(carId)) {
+      removeFavorite(carId);
+    } else {
+      addFavorite(carId);
+    }
+  };
 
   return (
     <div className="min-h-screen">
@@ -49,7 +68,6 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Scroll indicator */}
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
           <div className="w-6 h-10 border-2 border-white rounded-full flex justify-center">
             <div className="w-1 h-3 bg-white rounded-full mt-2 animate-pulse"></div>
@@ -120,7 +138,9 @@ const Home = () => {
               <CarCard
                 key={car.id}
                 car={car}
-                onViewDetails={() => {}}
+                onViewDetails={handleViewDetails}
+                isFavorite={user?.favorites?.includes(car.id) || false}
+                onToggleFavorite={handleToggleFavorite}
               />
             ))}
           </div>
