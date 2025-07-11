@@ -4,16 +4,14 @@ from pydantic import BaseModel
 from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM
 import torch
 import os
-import uvicorn # <-- Bu import satırı EKLENDİ
+import uvicorn
 
 app = FastAPI()
 
-# CORS ayarları - Düzeltildi!
+# CORS ayarları
 app.add_middleware(
     CORSMiddleware,
-    # Frontend'inizin çalıştığı portu (5173) buraya ekledik.
-    # Eğer başka bir port kullanırsanız, onu da eklemeniz gerekir.
-    allow_origins=["http://localhost:3000", "http://localhost:5173"], 
+    allow_origins=["http://localhost:3000", "http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -23,20 +21,22 @@ app.add_middleware(
 model_path = "./trained_model"
 
 try:
+    # Cihazı belirleme: CUDA (GPU) varsa 'cuda', yoksa 'cpu' kullan
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Model {device.upper()}'da yüklenecek.")
+
     tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
     model = AutoModelForCausalLM.from_pretrained(
         model_path,
         torch_dtype=torch.float16,
-        device_map="cpu",  # CPU'da çalıştır
+        device_map=device,  # <-- Burayı DÜZELTTİK: Cihazı otomatik algıla veya 'cuda' olarak ayarla
         trust_remote_code=True
     )
     model.config.use_cache = True
-    print("Model CPU'da yüklendi.")
+    print(f"Model {device.upper()}'da yüklendi.")
+
 except Exception as e:
     print(f"Model yüklenirken hata: {e}")
-    # Hata durumunda uygulamanın tamamen kapanması yerine,
-    # bir uyarı verip model olmadan devam etme veya daha iyi hata yönetimi düşünülebilir.
-    # Ancak şimdilik mevcut davranışı koruyoruz.
     exit(1)
 
 # Pipeline oluşturma
@@ -44,10 +44,10 @@ generator = pipeline(
     'text-generation',
     model=model,
     tokenizer=tokenizer,
-    # device=0 # CPU kullanıldığında bu satıra gerek yoktur, hatta hata verebilir
+    device=0 if device == "cuda" else -1 # <-- Burayı DÜZELTTİK: GPU için 0, CPU için -1
 )
 
-# İstek ve yanıt modelleri
+# İstek ve yanıt modelleri (mevcut haliyle kalabilir)
 class ChatRequest(BaseModel):
     prompt: str
 
@@ -69,7 +69,6 @@ def generate_response(prompt_text: str) -> str:
     )
     generated_text = output[0]['generated_text']
     response = generated_text.split("AI:", 1)[1].strip() if "AI:" in generated_text else generated_text.strip()
-    # Eğer AI cevabı içinde tekrar 'User:' veya 'AI:' geçiyorsa, onu kes.
     if "\nUser:" in response:
         response = response.split("\nUser:")[0].strip()
     if "\nAI:" in response:
@@ -82,7 +81,6 @@ async def chat(request: ChatRequest):
         response = generate_response(request.prompt)
         return ChatResponse(response=response)
     except Exception as e:
-        # Detaylı hatayı loglamak iyi bir pratik olabilir.
         print(f"Yanıt üretilirken API hatası: {e}")
         raise HTTPException(status_code=500, detail=f"Yanıt üretilirken hata: {e}")
 
