@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+transformers
+torch
+datasets
+peft
+accelerate
